@@ -188,6 +188,31 @@ def validate_and_refine_lottery_result(lucky_floors, topic_creator_id, seen_user
         )
     return valid_lucky_floors
 
+def generate_markdown_table(lucky_floors_info):
+    # 表格头
+    table = [
+        "| Created | Floor | UserName | Main page | Reply | Avatar |",
+        "|----------|------|--------|----------|----------|------|"
+    ]
+    
+    for floor_info in lucky_floors_info:
+        created = floor_info['created']
+        floor = floor_info['floor']
+        username = floor_info['username']
+        member_url = floor_info['member_url']
+        reply_url = floor_info['reply_url']
+        avatar_url = floor_info['avatar_url']
+        content = floor_info['content']
+
+        # 如果内容超过5个字符，则截取前5个字符并添加省略号
+        if len(content) > 5:
+            content = content[:5] + "..."
+        
+        # 添加表格行
+        table.append(f"| {created} | {floor:03} 楼 | @{username} | [{username}]({member_url}) | [{content}]({reply_url}) | <img src=\"{avatar_url}\" width=\"48px\" height=\"48px\"> |")
+    
+    return "\n".join(table)
+
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "init":
         # 初始化模式
@@ -200,6 +225,9 @@ if __name__ == "__main__":
             config = load_config()
             token = config["TOKEN"]
             proxy = config.get("PROXY")
+            
+            # 用户展示抽奖的时间
+            draw_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
             # 隐藏中间部分 token
             hidden_token = f"{token[:1]}-{'-' * 12}-{token[-1:]}"
@@ -242,7 +270,7 @@ if __name__ == "__main__":
                 initial_lucky_floors, topic_creator_username, seen_users, topic_id, token, total_floors, num_winners
             )
             
-            print("\n抽奖结果:")
+            print(f"\n抽奖结果（{draw_time}）:")
 
             lucky_floors_info = []
             for floor in lucky_floors:
@@ -254,9 +282,13 @@ if __name__ == "__main__":
                     "reply_url": reply_url
                 })
 
-            # 输出结果
+            # 输出文本结果
             for floor_info in lucky_floors_info:
-                print(f"{floor_info["created"]} 第 {floor_info['floor']:03} 楼： @{floor_info['username']} ({floor_info['member_url']}) ({floor_info['reply_url']})")
-
+                print(f"{floor_info["created"]} 第 {floor_info['floor']:03} 楼： @{floor_info['username']}")
+            
+            print(f"\nMarkdown 抽奖结果（{draw_time}）:\n")
+            # 输出 markdown 结果
+            markdown_table = generate_markdown_table(lucky_floors_info)
+            print(markdown_table)
         except Exception as e:
             print(f"发生异常: {e}")
