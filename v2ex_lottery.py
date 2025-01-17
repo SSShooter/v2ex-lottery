@@ -44,7 +44,7 @@ def get_json_with_bearer_auth(url, token):
         return response.json()
     except ValueError:
         raise ValueError("响应内容不是有效的 JSON 格式")
-
+@lru_cache(maxsize=128)
 def get_topic_info(topic_id, token):
     """
     获取主题信息
@@ -55,7 +55,7 @@ def get_topic_info(topic_id, token):
     """
     url = f"https://www.v2ex.com/api/v2/topics/{topic_id}"
     return get_json_with_bearer_auth(url, token)
-
+@lru_cache(maxsize=128)
 def get_topic_replies(topic_id, token, p=1):
     """
     获取主题的指定页回复
@@ -66,14 +66,16 @@ def get_topic_replies(topic_id, token, p=1):
     :return: 返回主题回复的列表
     """
     url = f"https://www.v2ex.com/api/v2/topics/{topic_id}/replies?p={p}"
+    print(url)
     return get_json_with_bearer_auth(url, token)
 
-def floor_lottery(total_floors, num_winners):
+def floor_lottery(total_floors, num_winners, excluded_users=None):
     """
     随机抽取幸运楼层
 
     :param total_floors: 总楼层数
     :param num_winners: 中奖人数
+    :param excluded_users: 要排除的用户ID集合，默认排除楼主
     :return: 抽中的楼层号列表
     """
     if num_winners > total_floors:
@@ -126,7 +128,7 @@ def get_user_data_from_reply(topic_id, token, floor):
 def initialize_config():
     """初始化配置"""
     print("初始化配置中...")
-    token = getpass.getpass("请输入您的 Bearer Token（通过 https://www.v2ex.com/settings/tokens 生成，为了保护输入后不会显示）: ")
+    token = getpass.getpass("请输入您的 Bearer Token（请参考 https://www.v2ex.com/help/personal-access-token 访问 https://www.v2ex.com/settings/tokens 生成，安全起见输入后不会显示）: ")
     proxy = input("请输入代理地址 (如 socks5h://127.0.0.1:1080，留空表示不使用代理): ").strip() or None
 
     # 保存到配置文件
@@ -148,6 +150,43 @@ def load_config():
             config[key] = value
 
     return config
+
+def validate_and_refine_lottery_result(lucky_floors, topic_creator_id, seen_users, topic_id, token, total_floors, num_winners):
+    """
+    检查并递归调整抽奖结果，排除楼主和重复用户。
+    
+    :param lucky_floors: 当前抽取的楼层列表
+    :param topic_creator_id: 楼主的用户ID
+    :param seen_users: 已中奖的用户ID集合
+    :param topic_id: 主题ID
+    :param token: Bearer Token
+    :param total_floors: 总楼层数
+    :param num_winners: 中奖人数
+    :return: 修正后的中奖楼层列表
+    """
+    valid_lucky_floors = []
+    
+    for floor in lucky_floors:
+        user_data = get_user_data_from_reply(topic_id, token, floor)
+        if not user_data:
+            continue
+        
+        username = user_data["username"]
+        if username == topic_creator_id or username in seen_users:
+            continue  # 跳过楼主和重复用户
+        
+        valid_lucky_floors.append(floor)
+        seen_users.add(username)
+    
+    # 计算还需补充的楼层数量
+    remaining_count = num_winners - len(valid_lucky_floors)
+    if remaining_count > 0:
+        # 递归补充抽取剩余楼层
+        additional_floors = floor_lottery(total_floors, remaining_count)
+        valid_lucky_floors += validate_and_refine_lottery_result(
+            additional_floors, topic_creator_id, seen_users, topic_id, token, total_floors, remaining_count
+        )
+    return valid_lucky_floors
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "init":
@@ -180,6 +219,9 @@ if __name__ == "__main__":
             topic_info = topic_info.get("result", {})
             total_floors = topic_info.get("replies", 0)
             topic_title = topic_info.get("title", "未知主题")
+            
+            # 获取主题创建者 ID
+            topic_creator_username = topic_info.get("member", {}).get("username", "未知用户")
 
             print(f"主题: {topic_title}")
             print(f"楼层总数: {total_floors}")
@@ -191,8 +233,15 @@ if __name__ == "__main__":
             num_winners = input("请输入中奖人数 (默认 1): ").strip()
             num_winners = int(num_winners) if num_winners else 1
 
-            # 抽奖
-            lucky_floors = floor_lottery(max_floor, num_winners)
+            # 初次抽奖
+            initial_lucky_floors = floor_lottery(max_floor, num_winners)
+
+            # 递归调整抽奖结果
+            seen_users = set()
+            lucky_floors = validate_and_refine_lottery_result(
+                initial_lucky_floors, topic_creator_username, seen_users, topic_id, token, total_floors, num_winners
+            )
+            
             print("\n抽奖结果:")
 
             lucky_floors_info = []
@@ -201,13 +250,8 @@ if __name__ == "__main__":
                 reply_id = user_data["reply_id"]
                 reply_url = f"{topic_url}#r_{reply_id}"
                 lucky_floors_info.append({
-                    "floor": user_data["floor"],
-                    "created": user_data["created"],
-                    "username": user_data["username"],
-                    "member_url": user_data["member_url"],
-                    "avatar_url": user_data["avatar_url"],
-                    "reply_url": reply_url,
-                    "content": user_data["content"]
+                    **user_data,
+                    "reply_url": reply_url
                 })
 
             # 输出结果
