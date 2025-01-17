@@ -29,22 +29,32 @@ Requirement already satisfied: certifi>=2017.4.17 in f:\documents\vscode\giffgaf
 请输入代理地址 (如 socks5h://127.0.0.1:1080，留空表示不使用代理): socks5h://127.0.0.1:1080
 配置完成！
 
-> python .\v2ex_lottery.py 
+> python.exe .\v2ex_lottery.py 
 使用的 Token: 9--------------4
 使用的代理: socks5h://127.0.0.1:1080
 请输入主题 URL: https://v2ex.com/t/1103737
 主题: T 楼 1.99 元 30 张英国 giffgaff， TG 群抽奖同步送 30 张，总计 60 张，为 giffgaff 中国的普及做贡献
 楼层总数: 357
-请输入抽奖楼层数 (默认 357):
+请输入抽奖楼层数 (默认 357): 
 请输入中奖人数 (默认 1): 2
-https://www.v2ex.com/api/v2/topics/1103737/replies?p=6
-https://www.v2ex.com/api/v2/topics/1103737/replies?p=13
+https://www.v2ex.com/api/v2/topics/1103737/replies?p=5
+https://www.v2ex.com/api/v2/topics/1103737/replies?p=8
 
-抽奖结果:
-2025-01-09 10:17:01 第 117 楼： @mypchas6fans (https://www.v2ex.com/member/mypchas6fans) (https://v2ex.com/t/1103737#r_15774145)
-2025-01-09 16:10:35 第 260 楼： @Trevor1 (https://www.v2ex.com/member/Trevor1) (https://v2ex.com/t/1103737#r_15776646)
+抽奖结果（2025-01-18 02:50:51）:
+2025-01-09 09:51:52 第 087 楼： @jsomin
+2025-01-09 10:49:23 第 151 楼： @BlackAndBlue
+
+Markdown 抽奖结果（2025-01-18 02:50:51）:
+
+| Created | Floor | UserName | Main page | Reply | Avatar |
+|----------|------|--------|----------|----------|------|
+| 2025-01-09 09:51:52 | 087 楼 | @jsomin | [jsomin](https://www.v2ex.com/member/jsomin) | [不是，之前...](https://v2ex.com/t/1103737#r_15773882) | <img src="https://cdn.v2ex.com/avatar/a20c/e405/569247_xxxlarge.png?m=1725430738" width="48px" height="48px"> |
+| 2025-01-09 10:49:23 | 151 楼 | @BlackAndBlue | [BlackAndBlue](https://www.v2ex.com/member/BlackAndBlue) | [参与一下](https://v2ex.com/t/1103737#r_15774504) | <img src="https://cdn.v2ex.com/avatar/81d1/6f40/234212_large.png?m=1682476635" width="48px" height="48px"> |
 ```
 
-
+| Created | Floor | UserName | Main page | Reply | Avatar |
+|----------|------|--------|----------|----------|------|
+| 2025-01-09 09:51:52 | 087 楼 | @jsomin | [jsomin](https://www.v2ex.com/member/jsomin) | [不是，之前...](https://v2ex.com/t/1103737#r_15773882) | <img src="https://cdn.v2ex.com/avatar/a20c/e405/569247_xxxlarge.png?m=1725430738" width="48px" height="48px"> |
+| 2025-01-09 10:49:23 | 151 楼 | @BlackAndBlue | [BlackAndBlue](https://www.v2ex.com/member/BlackAndBlue) | [参与一下](https://v2ex.com/t/1103737#r_15774504) | <img src="https://cdn.v2ex.com/avatar/81d1/6f40/234212_large.png?m=1682476635" width="48px" height="48px"> |
 
 
