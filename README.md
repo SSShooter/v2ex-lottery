@@ -1,5 +1,5 @@
-# V2EX  抽奖小工具
-
+# V2EX 抽奖小工具
+V2EX 抽奖小程序 was initiated by [@bfhyqy](https://www.v2ex.com/member/bfhyqy)
 ## 已实现部分
 - 支持（重新）配置 Token ，用于获取主题和回复，并写到配置文件
 - 支持启用、停止代理，如http、https、socks、socks5、socks5h 等
