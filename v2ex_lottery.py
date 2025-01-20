@@ -5,6 +5,8 @@ import requests
 import time
 from functools import lru_cache
 import getpass
+from datetime import datetime
+
 
 # 请求限制配置
 REQUEST_INTERVAL = 0.2  # 每次请求间隔 0.2 秒，限制每秒不超过 5 次请求
@@ -21,6 +23,65 @@ def rate_limited_request():
 def install_dependencies():
     """安装所需的 Python 模块"""
     os.system("pip install --upgrade pysocks requests[socks]")
+    print("所需的 Python 模块已安装！")
+
+def get_lottery_numbers(date=None):
+    """
+    获取指定日期的排列五开奖号码，如果不指定日期则获取最近一期的开奖号码
+
+    :param date: 日期格式为 YYYYMMDD
+    :return: 开奖号码列表
+    """
+    base_url = "https://api.huiniao.top/interface/home/lotteryHistory?type=plw&limit=1"
+    response = requests.get(base_url)
+    if response.status_code != 200:
+        raise ValueError(f"请求失败，状态码: {response.status_code}, 内容: {response.text}")
+    
+    data = response.json()
+    if data["code"] != 1:
+        raise ValueError(f"请求失败，消息: {data['info']}")
+    
+    last_draw = data["data"]["last"]
+    #if not date:
+    #    # 获取最近一期的开奖结果
+    #    numbers = [last_draw["one"], last_draw["two"], last_draw["three"], last_draw["four"], last_draw["five"]]
+    #    numbers = int("".join(numbers))
+    #    print(f"最近一期（{last_draw['day']}）的开奖结果为：{numbers}")
+    #    return numbers
+    
+    # 获取指定日期的开奖结果
+    first_draw_date = last_draw["day"].replace("-", "")
+    target_draw_date = date
+    
+    if not date:
+        target_draw_date = first_draw_date
+    
+    # 计算日期差
+    first_draw_date = datetime.strptime(first_draw_date, "%Y%m%d")
+    target_draw_date = datetime.strptime(target_draw_date, "%Y%m%d")
+    days_difference = (first_draw_date - target_draw_date).days
+    
+    if days_difference < 0:
+        raise ValueError(f"指定日期 {date} 在最近一期之后，无法获取开奖结果")
+    
+    page = days_difference + 1
+    
+    url = f"https://api.huiniao.top/interface/home/lotteryHistory?type=plw&page={page}&limit=1"
+    response = requests.get(url)
+    if response.status_code != 200:
+        raise ValueError(f"请求失败，状态码: {response.status_code}, 内容: {response.text}")
+    
+    data = response.json()
+    if data["code"] != 1:
+        raise ValueError(f"请求失败，消息: {data['info']}")
+    
+    draw = data["data"]["data"]["list"][0]
+    if not draw:
+        raise ValueError(f"获取指定日期 {date} 的开奖结果失败，无法找到对应的开奖结果")
+    numbers = [draw["one"], draw["two"], draw["three"], draw["four"], draw["five"]]
+    numbers = int("".join(numbers))
+    print(f"指定日期 {date} 的开奖结果为：{numbers}")
+    return numbers
 
 def get_json_with_bearer_auth(url, token):
     """
@@ -69,17 +130,20 @@ def get_topic_replies(topic_id, token, p=1):
     print(url)
     return get_json_with_bearer_auth(url, token)
 
-def floor_lottery(total_floors, num_winners, excluded_users=None):
+def floor_lottery(total_floors, num_winners, seed=None):
     """
     随机抽取幸运楼层
 
     :param total_floors: 总楼层数
     :param num_winners: 中奖人数
-    :param excluded_users: 要排除的用户ID集合，默认排除楼主
+    :param seed: 随机种子
     :return: 抽中的楼层号列表
     """
     if num_winners > total_floors:
         raise ValueError("中奖人数不能超过总楼层数")
+    
+    if seed is not None:
+        random.seed(seed) 
 
     return sorted(random.sample(range(1, total_floors + 1), num_winners))
 
@@ -130,11 +194,13 @@ def initialize_config():
     print("初始化配置中...")
     token = getpass.getpass("请输入您的 Bearer Token（请参考 https://www.v2ex.com/help/personal-access-token 访问 https://www.v2ex.com/settings/tokens 生成，安全起见输入后不会显示）: ")
     proxy = input("请输入代理地址 (如 socks5h://127.0.0.1:1080，留空表示不使用代理): ").strip() or None
+    use_lottery_seed = input("是否使用排列五开奖结果作为种子 (Y/N): ").strip().upper() or "N"
 
     # 保存到配置文件
     with open("config.txt", "w") as f:
         f.write(f"TOKEN={token}\n")
         f.write(f"PROXY={proxy}\n")
+        f.write(f"USE_LOTTERY_SEED={use_lottery_seed}\n")
 
     print("配置完成！")
 
@@ -182,7 +248,7 @@ def validate_and_refine_lottery_result(lucky_floors, topic_creator_id, seen_user
     remaining_count = num_winners - len(valid_lucky_floors)
     if remaining_count > 0:
         # 递归补充抽取剩余楼层
-        additional_floors = floor_lottery(total_floors, remaining_count)
+        additional_floors = floor_lottery(total_floors=total_floors, num_winners=remaining_count, seed=seed)
         valid_lucky_floors += validate_and_refine_lottery_result(
             additional_floors, topic_creator_id, seen_users, topic_id, token, total_floors, remaining_count
         )
@@ -225,6 +291,7 @@ if __name__ == "__main__":
             config = load_config()
             token = config["TOKEN"]
             proxy = config.get("PROXY")
+            use_lottery_seed = config.get("USE_LOTTERY_SEED", "NO").upper()
             
             # 用户展示抽奖的时间
             draw_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
@@ -260,9 +327,21 @@ if __name__ == "__main__":
 
             num_winners = input("请输入中奖人数 (默认 1): ").strip()
             num_winners = int(num_winners) if num_winners else 1
+            
+            # 询问是否使用最近一期的开奖结果作为种子
+            if use_lottery_seed.upper() in ["Y", "YES"]:
+                seed_choice = input("是否使用最近一期的排列五开奖结果作为随机种子？(Yes/No/指定日期，如 20250101): ").strip().upper()
+                if seed_choice.upper() in ["Y", "YES"]:
+                    seed = get_lottery_numbers()
+                elif seed_choice.upper() in ["N", "NO"]:
+                    seed = None
+                else:
+                    seed = get_lottery_numbers(seed_choice)
+            else:
+                seed = None
 
             # 初次抽奖
-            initial_lucky_floors = floor_lottery(max_floor, num_winners)
+            initial_lucky_floors = floor_lottery(total_floors=max_floor, num_winners=num_winners, seed=seed)
 
             # 递归调整抽奖结果
             seen_users = set()
@@ -285,6 +364,9 @@ if __name__ == "__main__":
             # 输出文本结果
             for floor_info in lucky_floors_info:
                 print(f"{floor_info["created"]} 第 {floor_info['floor']:03} 楼： @{floor_info['username']}")
+            
+            
+            print(f"\n如何验证抽奖结果（需要有python环境）：\n访问 https://github.com/360card/v2ex-lottery 下载 v2ex-lottery 脚本后重复上面的步骤。\n")
             
             print(f"\nMarkdown 抽奖结果（{draw_time}）:\n")
             # 输出 markdown 结果
