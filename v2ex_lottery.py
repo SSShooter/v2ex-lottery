@@ -190,7 +190,7 @@ def initialize_config():
     print("初始化配置中...")
     token = getpass.getpass("请输入您的 Bearer Token（请参考 https://www.v2ex.com/help/personal-access-token 访问 https://www.v2ex.com/settings/tokens 生成，安全起见输入后不会显示）: ")
     proxy = input("请输入代理地址 (如 socks5h://127.0.0.1:1080，留空表示不使用代理): ").strip() or None
-    use_lottery_seed = input("是否使用排列五开奖结果作为种子 (Y/N): ").strip().upper() or "N"
+    use_lottery_seed = input("是否使用排列五（每天 21:25 开奖）开奖结果作为种子 (Yes/No): ").strip().upper() or "No"
 
     # 保存到配置文件
     with open("config.txt", "w") as f:
@@ -326,7 +326,7 @@ if __name__ == "__main__":
             
             # 询问是否使用最近一期的开奖结果作为种子
             if use_lottery_seed.upper() in ["Y", "YES"]:
-                seed_choice = input("是否使用最近一期（每天 21:25 开奖）的排列五开奖结果作为随机种子？(Yes/No/指定日期，如 20250101): ").strip().upper()
+                seed_choice = input("是否使用最近一期（每天 21:25 开奖）的排列五开奖结果作为随机数种子？(Yes/No/指定日期，如 20250101): ").strip().upper()
                 if seed_choice.upper() in ["Y", "YES"]:
                     seed = get_lottery_numbers()
                 elif seed_choice.upper() in ["N", "NO"]:
