@@ -37,6 +37,21 @@ V2EX 抽奖小程序 was initiated by [@bfhyqy](https://www.v2ex.com/member/bfhy
 ## 运行过程展示
 
 ```
+> python .\v2ex_lottery.py init
+Looking in indexes: https://pypi.tuna.tsinghua.edu.cn/simple
+Requirement already satisfied: pysocks in f:\documents\vscode\giffgaff\.conda\lib\site-packages (1.7.1)
+Requirement already satisfied: requests[socks] in f:\documents\vscode\giffgaff\.conda\lib\site-packages (2.32.3)
+Requirement already satisfied: charset-normalizer<4,>=2 in f:\documents\vscode\giffgaff\.conda\lib\site-packages (from requests[socks]) (3.4.1)
+Requirement already satisfied: idna<4,>=2.5 in f:\documents\vscode\giffgaff\.conda\lib\site-packages (from requests[socks]) (3.10)
+Requirement already satisfied: urllib3<3,>=1.21.1 in f:\documents\vscode\giffgaff\.conda\lib\site-packages (from requests[socks]) (2.3.0)
+Requirement already satisfied: certifi>=2017.4.17 in f:\documents\vscode\giffgaff\.conda\lib\site-packages (from requests[socks]) (2024.12.14)
+所需的 Python 模块已安装！
+初始化配置中...
+请输入您的 Bearer Token（请参考 https://www.v2ex.com/help/personal-access-token 访问 https://www.v2ex.com/settings/tokens 生成，安全起见输入后不会显示）:
+请输入代理地址 (如 socks5h://127.0.0.1:1080，留空表示不使用代理): socks5h://127.0.0.1:1080
+是否使用排列五（每天 21:25 开奖）开奖结果作为随机数种子 (Y/N): Yes
+配置完成！
+
 > python .\v2ex_lottery.py 
 使用的 Token: 9--------------4
 使用的代理: socks5h://127.0.0.1:1080
@@ -45,7 +60,7 @@ V2EX 抽奖小程序 was initiated by [@bfhyqy](https://www.v2ex.com/member/bfhy
 楼层总数: 357
 请输入抽奖楼层数 (默认 357):
 请输入中奖人数 (默认 1): 3
-是否使用最近一期的排列五（每天 21:25 开奖）开奖结果作为随机种子？(Yes/No/指定日期，如 20250101): 20250101
+是否使用最近一期的排列五（每天 21:25 开奖）开奖结果作为随机数种子？(Yes/No/指定日期，如 20250101): 20250101
 2025-01-01 21:25:00 的开奖结果为：12336
 https://www.v2ex.com/api/v2/topics/1103737/replies?p=5
 https://www.v2ex.com/api/v2/topics/1103737/replies?p=12
