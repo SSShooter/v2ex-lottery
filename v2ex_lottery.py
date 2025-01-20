@@ -42,19 +42,14 @@ def get_lottery_numbers(date=None):
         raise ValueError(f"请求失败，消息: {data['info']}")
     
     last_draw = data["data"]["last"]
-    #if not date:
-    #    # 获取最近一期的开奖结果
-    #    numbers = [last_draw["one"], last_draw["two"], last_draw["three"], last_draw["four"], last_draw["five"]]
-    #    numbers = int("".join(numbers))
-    #    print(f"最近一期（{last_draw['day']}）的开奖结果为：{numbers}")
-    #    return numbers
-    
+ 
     # 获取指定日期的开奖结果
     first_draw_date = last_draw["day"].replace("-", "")
     target_draw_date = date
     
     if not date:
         target_draw_date = first_draw_date
+        date = first_draw_date
     
     # 计算日期差
     first_draw_date = datetime.strptime(first_draw_date, "%Y%m%d")
@@ -78,9 +73,10 @@ def get_lottery_numbers(date=None):
     draw = data["data"]["data"]["list"][0]
     if not draw:
         raise ValueError(f"获取指定日期 {date} 的开奖结果失败，无法找到对应的开奖结果")
+    open_time = draw["open_time"]
     numbers = [draw["one"], draw["two"], draw["three"], draw["four"], draw["five"]]
     numbers = int("".join(numbers))
-    print(f"指定日期 {date} 的开奖结果为：{numbers}")
+    print(f"{open_time} 的开奖结果为：{numbers}")
     return numbers
 
 def get_json_with_bearer_auth(url, token):
@@ -330,7 +326,7 @@ if __name__ == "__main__":
             
             # 询问是否使用最近一期的开奖结果作为种子
             if use_lottery_seed.upper() in ["Y", "YES"]:
-                seed_choice = input("是否使用最近一期的排列五开奖结果作为随机种子？(Yes/No/指定日期，如 20250101): ").strip().upper()
+                seed_choice = input("是否使用最近一期（每天 21:25 开奖）的排列五开奖结果作为随机种子？(Yes/No/指定日期，如 20250101): ").strip().upper()
                 if seed_choice.upper() in ["Y", "YES"]:
                     seed = get_lottery_numbers()
                 elif seed_choice.upper() in ["N", "NO"]:
@@ -366,7 +362,10 @@ if __name__ == "__main__":
                 print(f"{floor_info["created"]} 第 {floor_info['floor']:03} 楼： @{floor_info['username']}")
             
             
-            print(f"\n如何验证抽奖结果（需要有python环境）：\n访问 https://github.com/360card/v2ex-lottery 下载 v2ex-lottery 脚本后重复上面的步骤。\n")
+            print(f"\n如何验证抽奖结果（需要有python环境）：")
+            print(f"1 访问 https://github.com/360card/v2ex-lottery 下载 v2ex-lottery") 
+            print(f"2 执行命令：python v2ex-lottery.py init 初始化配置")
+            print(f"3 执行命令：python v2ex-lottery.py 输入相同参数，重复执行抽奖程序")
             
             print(f"\nMarkdown 抽奖结果（{draw_time}）:\n")
             # 输出 markdown 结果
