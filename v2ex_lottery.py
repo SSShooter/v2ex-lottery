@@ -9,7 +9,7 @@ from datetime import datetime
 
 
 # 请求限制配置
-REQUEST_INTERVAL = 0.2  # 每次请求间隔 0.2 秒，限制每秒不超过 5 次请求
+REQUEST_INTERVAL = 1  # 每次请求间隔 1 秒，限制每秒不超过 1 次请求
 _last_request_time = 0
 
 def rate_limited_request():
@@ -213,7 +213,7 @@ def load_config():
 
     return config
 
-def validate_and_refine_lottery_result(lucky_floors, topic_creator_id, seen_users, topic_id, token, total_floors, num_winners):
+def validate_and_refine_lottery_result(lucky_floors, topic_creator_id, seen_users, topic_id, token, total_floors, num_winners, max_attempts=15):
     """
     检查并递归调整抽奖结果，排除楼主和重复用户。
     
@@ -224,6 +224,7 @@ def validate_and_refine_lottery_result(lucky_floors, topic_creator_id, seen_user
     :param token: Bearer Token
     :param total_floors: 总楼层数
     :param num_winners: 中奖人数
+    :param max_attempts: 最大尝试次数，防止无限递归
     :return: 修正后的中奖楼层列表
     """
     valid_lucky_floors = []
@@ -242,22 +243,25 @@ def validate_and_refine_lottery_result(lucky_floors, topic_creator_id, seen_user
     
     # 计算还需补充的楼层数量
     remaining_count = num_winners - len(valid_lucky_floors)
-    if remaining_count > 0:
+    if remaining_count > 0 and max_attempts > 0:
         # 递归补充抽取剩余楼层
         additional_floors = floor_lottery(total_floors=total_floors, num_winners=remaining_count, seed=seed)
         valid_lucky_floors += validate_and_refine_lottery_result(
-            additional_floors, topic_creator_id, seen_users, topic_id, token, total_floors, remaining_count
+            additional_floors, topic_creator_id, seen_users, topic_id, token, total_floors, remaining_count, max_attempts - 1
         )
+    elif remaining_count > 0:
+        print("警告: 无法找到足够的有效楼层进行抽奖，已返回当前抽取到的有效楼层。")
+    
     return valid_lucky_floors
 
 def generate_markdown_table(lucky_floors_info):
     # 表格头
     table = [
-        "| Created | Floor | UserName | Main page | Reply | Avatar |",
-        "|----------|------|--------|----------|----------|------|"
+        "| ID | Created | Floor | UserName | Main page | Reply | Avatar |",
+        "|----|----------|------|--------|----------|----------|------|"
     ]
     
-    for floor_info in lucky_floors_info:
+    for idx, floor_info in enumerate(lucky_floors_info, start=1):
         created = floor_info['created']
         floor = floor_info['floor']
         username = floor_info['username']
@@ -269,9 +273,9 @@ def generate_markdown_table(lucky_floors_info):
         # 如果内容超过5个字符，则截取前5个字符并添加省略号
         if len(content) > 5:
             content = content[:5] + "..."
-        
+
         # 添加表格行
-        table.append(f"| {created} | {floor:03} 楼 | @{username} | [{username}]({member_url}) | [{content}]({reply_url}) | <img src=\"{avatar_url}\" width=\"48px\" height=\"48px\"> |")
+        table.append(f"| {idx} | {created} | {floor:03} 楼 | @{username} | [{username}]({member_url}) | [{content}]({reply_url}) | <img src=\"{avatar_url}\" width=\"48px\" height=\"48px\"> |")
     
     return "\n".join(table)
 
