@@ -72,7 +72,7 @@ https://www.v2ex.com/api/v2/topics/1103737/replies?p=13
 2025-01-09 14:45:40 第 243 楼： @megamilk
 
 如何验证抽奖结果（需要有python环境）：
-1 访问 https://github.com/360card/v2ex-lottery 下载 v2ex-lottery
+1 访问 https://github.com/SSShooter/v2ex-lottery 下载 v2ex-lottery
 2 执行命令：python v2ex-lottery.py init 初始化配置
 3 执行命令：python v2ex-lottery.py 输入相同参数，重复执行抽奖程序
 

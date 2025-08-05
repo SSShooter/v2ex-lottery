@@ -314,7 +314,7 @@ if __name__ == "__main__":
             
             
             print(f"\n如何验证抽奖结果（需要有python环境）：")
-            print(f"1 访问 https://github.com/360card/v2ex-lottery 下载 v2ex-lottery") 
+            print(f"1 访问 https://github.com/SSShooter/v2ex-lottery 下载 v2ex-lottery") 
             print(f"2 执行命令：python v2ex-lottery.py init 初始化配置")
             print(f"3 执行命令：python v2ex-lottery.py 输入相同参数，重复执行抽奖程序")
             
